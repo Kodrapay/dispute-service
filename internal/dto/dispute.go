@@ -15,4 +15,7 @@ type DisputeResponse struct {
 	ID        string `json:"id"`
 	Status    string `json:"status"`
 	Reference string `json:"reference"`
+	MerchantID string `json:"merchant_id,omitempty"`
+	OpenedAt  string `json:"opened_at,omitempty"`
+	ClosedAt  string `json:"closed_at,omitempty"`
 }
