@@ -30,14 +30,14 @@ func NewDisputeRepository(dsn string) (*DisputeRepository, error) {
 	return &DisputeRepository{db: db}, nil
 }
 
-func (r *DisputeRepository) findTransactionIDByReference(ctx context.Context, ref string) (string, string, error) {
-	var id, merchantID string
+func (r *DisputeRepository) findTransactionIDByReference(ctx context.Context, ref string) (int, int, error) {
+	var id, merchantID int
 	err := r.db.QueryRowContext(ctx, `SELECT id, merchant_id FROM transactions WHERE reference = $1`, ref).Scan(&id, &merchantID)
 	if err == sql.ErrNoRows {
-		return "", "", nil
+		return 0, 0, nil
 	}
 	if err != nil {
-		return "", "", err
+		return 0, 0, err
 	}
 	return id, merchantID, nil
 }
@@ -47,7 +47,7 @@ func (r *DisputeRepository) Create(ctx context.Context, ref, reason string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	if txID == "" {
+	if txID == 0 {
 		return nil, fmt.Errorf("transaction not found")
 	}
 
@@ -68,7 +68,7 @@ func (r *DisputeRepository) Create(ctx context.Context, ref, reason string) (*mo
 	return &dispute, nil
 }
 
-func (r *DisputeRepository) Get(ctx context.Context, id string) (*models.Dispute, error) {
+func (r *DisputeRepository) Get(ctx context.Context, id int) (*models.Dispute, error) {
 	query := `
 		SELECT d.id, d.transaction_id, d.status, d.reason, d.evidence, d.opened_at, d.closed_at, t.reference, t.merchant_id
 		FROM disputes d
@@ -100,7 +100,7 @@ func (r *DisputeRepository) Get(ctx context.Context, id string) (*models.Dispute
 	return &disp, nil
 }
 
-func (r *DisputeRepository) AddEvidence(ctx context.Context, id string, ev models.Evidence) (*models.Dispute, error) {
+func (r *DisputeRepository) AddEvidence(ctx context.Context, id int, ev models.Evidence) (*models.Dispute, error) {
 	disp, err := r.Get(ctx, id)
 	if err != nil || disp == nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (r *DisputeRepository) AddEvidence(ctx context.Context, id string, ev model
 	return disp, nil
 }
 
-func (r *DisputeRepository) ListByMerchant(ctx context.Context, merchantID string, limit int) ([]*models.Dispute, error) {
+func (r *DisputeRepository) ListByMerchant(ctx context.Context, merchantID int, limit int) ([]*models.Dispute, error) {
 	if limit <= 0 {
 		limit = 50
 	}

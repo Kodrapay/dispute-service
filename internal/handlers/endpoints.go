@@ -28,19 +28,25 @@ func (h *DisputeHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *DisputeHandler) Get(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid dispute ID")
+	}
 	resp, err := h.svc.Get(c.Context(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	if resp.ID == "" {
+	if resp.ID == 0 {
 		return fiber.NewError(fiber.StatusNotFound, "dispute not found")
 	}
 	return c.JSON(resp)
 }
 
 func (h *DisputeHandler) AddEvidence(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid dispute ID")
+	}
 	var req dto.DisputeEvidenceRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
@@ -49,15 +55,15 @@ func (h *DisputeHandler) AddEvidence(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if resp.ID == "" {
+	if resp.ID == 0 {
 		return fiber.NewError(fiber.StatusNotFound, "dispute not found")
 	}
 	return c.JSON(resp)
 }
 
 func (h *DisputeHandler) ListByMerchant(c *fiber.Ctx) error {
-	merchantID := c.Query("merchant_id")
-	if merchantID == "" {
+	merchantID := c.QueryInt("merchant_id", 0) // Use c.QueryInt for query parameters
+	if merchantID == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "merchant_id is required")
 	}
 	limit := c.QueryInt("limit", 50)

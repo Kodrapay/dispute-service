@@ -17,10 +17,10 @@ type DisputeService struct {
 func NewDisputeService(repo *repositories.DisputeRepository) *DisputeService { return &DisputeService{repo: repo} }
 
 func (s *DisputeService) Create(ctx context.Context, req dto.DisputeCreateRequest) (dto.DisputeResponse, error) {
-	if req.TransactionReference == "" {
+	if req.TransactionReference == 0 { // int check
 		return dto.DisputeResponse{}, fmt.Errorf("transaction_reference is required")
 	}
-	dispute, err := s.repo.Create(ctx, req.TransactionReference, req.Reason)
+	dispute, err := s.repo.Create(ctx, fmt.Sprintf("%d", req.TransactionReference), req.Reason) // Convert int to string for ref
 	if err != nil {
 		return dto.DisputeResponse{}, err
 	}
@@ -33,8 +33,8 @@ func (s *DisputeService) Create(ctx context.Context, req dto.DisputeCreateReques
 	}, nil
 }
 
-func (s *DisputeService) Get(ctx context.Context, id string) (dto.DisputeResponse, error) {
-	dispute, err := s.repo.Get(ctx, id)
+func (s *DisputeService) Get(ctx context.Context, id int) (dto.DisputeResponse, error) { // int
+	dispute, err := s.repo.Get(ctx, id) // int
 	if err != nil {
 		return dto.DisputeResponse{}, err
 	}
@@ -54,11 +54,11 @@ func (s *DisputeService) Get(ctx context.Context, id string) (dto.DisputeRespons
 	return resp, nil
 }
 
-func (s *DisputeService) AddEvidence(ctx context.Context, id string, req dto.DisputeEvidenceRequest) (dto.DisputeResponse, error) {
-	if req.EvidenceURL == "" {
+func (s *DisputeService) AddEvidence(ctx context.Context, id int, req dto.DisputeEvidenceRequest) (dto.DisputeResponse, error) { // int
+	if req.EvidenceURL == 0 { // int check
 		return dto.DisputeResponse{}, fmt.Errorf("evidence_url is required")
 	}
-	dispute, err := s.repo.AddEvidence(ctx, id, models.Evidence{URL: req.EvidenceURL, Note: req.Note})
+	dispute, err := s.repo.AddEvidence(ctx, id, models.Evidence{URL: fmt.Sprintf("%d", req.EvidenceURL), Note: req.Note}) // int
 	if err != nil {
 		return dto.DisputeResponse{}, err
 	}
@@ -74,8 +74,8 @@ func (s *DisputeService) AddEvidence(ctx context.Context, id string, req dto.Dis
 	}, nil
 }
 
-func (s *DisputeService) ListByMerchant(ctx context.Context, merchantID string, limit int) ([]dto.DisputeResponse, error) {
-	list, err := s.repo.ListByMerchant(ctx, merchantID, limit)
+func (s *DisputeService) ListByMerchant(ctx context.Context, merchantID int, limit int) ([]dto.DisputeResponse, error) { // int
+	list, err := s.repo.ListByMerchant(ctx, merchantID, limit) // int
 	if err != nil {
 		return nil, err
 	}
